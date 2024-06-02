@@ -1,22 +1,27 @@
-name: lab05
-run-name: test
+name: Docker
+run-name: compile within docker
 on: [push]
 jobs:
-  linux:
+  compile_on_ubuntu:
     runs-on: ubuntu-latest
     steps:
-      - name: check
+      - name: checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: compilation
+      - name: instalation
         run: |
-          cmake -H. -B_build -DBUILD_TESTS=ON -DBUILD_COVERAGE=ON
-          cmake --build _build
-          cmake --build _build --target test -- ARGS=--verbose
-      - name: Coveralls
-        uses: threeal/gcovr-action@v1.0.0
+          sudo apt-get remove containerd.io
+          sudo apt install docker.io docker-compose -y
+      - name: Run sequence
+        run: docker build -t builder .
+      - name: image
+        run: docker run --name test -t builder ls
+      - name: Copy log file
+        run: docker cp test:/repo/log.txt ./log.txt
+      - name: file
+        uses: actions/upload-artifact@v4
         with:
-          excludes: third-party
-          coveralls-send: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: llogs
+          path: /home/runner/work/lab08/lab08/log.txt
+
